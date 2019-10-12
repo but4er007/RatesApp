@@ -13,11 +13,12 @@ class DisablableEditText @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : EditText(context, attrs, defStyleAttr) {
-
+    private var editable = true
     private var lastMovementMethod: MovementMethod? = null
     private var lastKeyListener: KeyListener? = null
 
     fun setEditable(editable: Boolean) {
+        if (this.editable == editable) return
         if (editable) {
             if (lastMovementMethod != null) {
                 movementMethod = lastMovementMethod
@@ -39,6 +40,7 @@ class DisablableEditText @JvmOverloads constructor(
             isFocusable = false
             isFocusableInTouchMode = false
         }
+        this.editable = editable
     }
 
     fun dispatchClickEvent() {

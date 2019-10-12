@@ -92,38 +92,11 @@ class RatesAdapter(
     ) : RecyclerView.ViewHolder(itemView) {
         private val rateEditText = itemView.rate_value
 
-        fun bind(position: Int, rate: CurrencyAmountVO) {
-            itemView.rate_id.text = rate.currencyCode
-            itemView.rate_description.text = currencyNames?.getDisplayNameFor(rate.currencyCode)
-            imageLoader.loadCircleFlagInto(itemView.flag_image, rate.currencyCode, flagSize)
-            if (position == 0 && !rateEditText.hasFocus()) {
-                itemView.setOnClickListener {
-                    rateEditText.dispatchClickEvent()
-                }
-                rateEditText.removeTextChangedListener(baseAmountChangeListener)
-                rateEditText.setText("%.2f".format(Locale.US, rate.currencyAmount))
-                rateEditText.addTextChangedListener(baseAmountChangeListener)
-                rateEditText.setEditable(true)
-                rateEditText.onFocusChangeListener = focusChangeListener
-                if (firstItemJustChanged) {
-                    rateEditText.dispatchClickEvent()
-                    firstItemJustChanged = false
-                }
-            } else {
-                itemView.setOnClickListener {
-                    rateClickListener.invoke(rate.currencyCode)
-                }
-                rateEditText.removeTextChangedListener(baseAmountChangeListener)
-                rateEditText.setText("%.2f".format(Locale.US, rate.currencyAmount))
-                rateEditText.setEditable(false)
-                rateEditText.onFocusChangeListener = null
-            }
-        }
-
         private val baseAmountChangeListener = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (adapterPosition != 0) return
                 s ?: return
                 val input = s.toString()
                 if (input.isEmpty()) {
@@ -136,6 +109,7 @@ class RatesAdapter(
         }
 
         private val focusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+            if (adapterPosition != 0) return@OnFocusChangeListener
             if (!hasFocus) {
                 val imm =
                     v.context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -145,6 +119,39 @@ class RatesAdapter(
                 firstItemInEditMode = true
             }
         }
+
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position == 0) {
+                    rateEditText.dispatchClickEvent()
+                } else {
+                    rateClickListener.invoke(amounts[position].currencyCode)
+                }
+            }
+            rateEditText.onFocusChangeListener = focusChangeListener
+            rateEditText.addTextChangedListener(baseAmountChangeListener)
+        }
+
+        fun bind(position: Int, rate: CurrencyAmountVO) {
+            if (itemView.rate_id.text.toString() != rate.currencyCode) {
+                itemView.rate_id.text = rate.currencyCode
+                itemView.rate_description.text = currencyNames?.getDisplayNameFor(rate.currencyCode)
+                imageLoader.loadCircleFlagInto(itemView.flag_image, rate.currencyCode, flagSize)
+            }
+            if (position == 0 && !rateEditText.hasFocus()) {
+                rateEditText.setText("%.2f".format(Locale.US, rate.currencyAmount))
+                rateEditText.setEditable(true)
+                if (firstItemJustChanged) {
+                    rateEditText.dispatchClickEvent()
+                    firstItemJustChanged = false
+                }
+            } else {
+                rateEditText.setText("%.2f".format(Locale.US, rate.currencyAmount))
+                rateEditText.setEditable(false)
+            }
+        }
+
     }
 
     companion object {

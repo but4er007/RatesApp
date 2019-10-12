@@ -25,7 +25,11 @@ class RatesActivity : Activity() {
         adapter.onFirstItemChanged = ::scrollToTop
 
         rates_list.apply {
-            layoutManager = LinearLayoutManager(this@RatesActivity)
+            layoutManager = object : LinearLayoutManager(this@RatesActivity) {
+                override fun supportsPredictiveItemAnimations(): Boolean {
+                    return false
+                }
+            }
             adapter = this@RatesActivity.adapter
             itemAnimator = object : DefaultItemAnimator() {
                 override fun canReuseUpdatedViewHolder(
